@@ -1,133 +1,553 @@
-class ExampleTask extends Component {
-  constructor(options = {}) {
-    options = {
-      eventPrefix: "task",
-      targetSize: 20,
-      timeout: 3000,
-      nRound: 5,
-      delayRange: [500, 1000],
-      screenWidth: 600,
-      screenHeight: 400,
-      ...options,
-    }
-    super(options) // note that options are automatically assigned to instance variables
-    window.task = this  // allows you to reference the task object from the console
-    this.recordEvent("initialize", options)
+/*
+ * Requires:
+ *     psiturk.js
+ *     utils.js
+ */
 
-    // setup the display
-    // this.div is defined in Component's constructor
-    this.div.css({
-      margin: "auto",
-      position: "relative",
-      textAlign: "center",
-    })
+// Initalize psiturk object
+var psiTurk = new PsiTurk(uniqueId, adServerLoc, mode); 
 
-    this.canvas = new Canvas({
-      width: this.screenWidth,
-      height: this.screenHeight,
-    }).appendTo(this.div)
+var mycondition = condition;  // these two variables are passed by the psiturk server process
+var mycounterbalance = counterbalance;  // they tell you which condition you have been assigned to
+// they are not used in the stroop code but may be useful to you
 
-    this.centerText = $("<div>")
-      .css({
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        fontSize: "80px",
-        fontWeight: 400,
-        margin: 0,
-        lineHeight: 1,
-      })
-      .appendTo(this.div)
-  }
+// All pages to be loaded
+var pages = [  
+  "instructions/instruct-1.html",
+  "instructions/instruct-2.html",
+  "instructions/instruct-ready2.html",
+  "instructions/instruct-readytext.html",
+  "stage_text.html",
+  "stage2.html",
+  "stage.html",
+  "postquestionnaire.html",
+  "finishprolific.html",
+  "break.html"  
+];  
+ 
+const init = (async () => {
+  await psiTurk.preloadPages(pages);
+})()
 
-  async _run() {
-    // this is our main method, which is called by this.run()
-    await button(this.centerText, "start").promise()
-    await this.countdown()
-    for (let i = 0; i < this.nRound; i++) {
-      // using this.sleep will reject the promise if the run is canceled (this.cancel())
-      // this ensures that the task doesn't continue running after cancel() is called
-      // if you don't use cancel(), you don't need to worry about this
-      await this.sleep(uniformRandom(this.delayRange[0], this.delayRange[1]))
-      this.setTarget()
 
-      let result = await this.getClick()
-      if (result != "hit") {
-        await this.sleep(1000)
-        await this.showOutcome(result)
-        return result
+var instructionPages = [ // add as a list as many pages as you like
+  //"instructions/instruct-ready2.html"
+  "instructions/instruct-1.html",
+  "instructions/instruct-2.html",
+  "instructions/instruct-readytext.html",
+]; 
+
+// Here
+
+
+
+/********************
+* HTML manipulation
+*
+* All HTML files in the templates directory are requested 
+* from the server when the PsiTurk object is created above. We
+* need code to get those pages from the PsiTurk object and 
+* insert them into the document.
+*
+********************/
+
+/********************
+* STROOP TEST       *
+********************/
+
+
+
+
+var getRandomInt=function(max) { 
+  return Math.floor(Math.random() * Math.floor(max));
+};
+
+
+
+var calculate_sum=function(b,t) {
+  var s=0
+  for(var i=0;i<b.length;i++) {
+    for(var j=0;j<b[i].length;j++) {
+      if(b[i][j]==t) {
+        s+=1
       }
     }
-    await this.showOutcome("win")
-    return "win"
-  }
+  } 
+  return s 
+};
 
-  async getClick() {
-    let result = await Promise.race([
-      this.canvas.getClick(),
-      this.sleep(this.timeout, "timeout"),
-    ])
-    if (result != "timeout") {
-      let { x, y } = result
-      if (this.isHit(x, y)) {
-        this.recordEvent("hit", {x, y})
-        this.drawTarget("green")
-        await this.sleep(300)
-        this.canvas.clear()
-        return "hit"
-      } else {
-        this.recordEvent("miss", {x, y})
-        this.canvas.drawCross(x, y, 5, "red")
-        return "miss"
-      }
-    } else {
-      // timeout
-      this.recordEvent("timeout")
-      this.drawTarget("red")
-      return "timeout"
+var GridWorldExperiment = function() {     
+    var all_rules=['translation','symmetry','connected','rectangle','tree','pyramid','zigzag','cross','tree2','translation2','translation3','gsp_4x4']
+    var rule='connected';     
+    var condition=Math.floor(Math.random() * 10) + 1;  // Random condition from 1-10
+    var BREAK_INTERVAL = 10;  // Show break every 10 trials
+
+    // Load configuration from JSON file
+    var config = null;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', `/static/config/v1/${condition}.json`, false);  // Updated path to include /static/
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                config = JSON.parse(xhr.responseText);
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                return;
+            }
+        } else {
+            console.error('Error loading config:', xhr.status);
+            return;
+        }
+    };
+    xhr.onerror = function() {
+        console.error('Network error loading config');
+        return;
+    };
+    xhr.send();
+
+    if (!config) {
+        console.error('Failed to load configuration');
+        return;
     }
-  }
 
-  async countdown() {
-    this.recordEvent("countdown")
-    for (let i = 3; i > 0; i--) {
-      this.centerText.text(i)
-      await sleep(1000)
-    }
-    this.centerText.hide()
-  }
+    // Initialize mazes and starts from the JSON data
+    var mazes = [];
+    var starts = [];
+    var imagePairs = [];
+    var trialNumbers = [];
+    
+    // Process each trial in the main trials array
+    config.trials.main.forEach(trial => {
+        mazes.push(trial.grid);
+        starts.push(trial.start);
+        imagePairs.push(trial.image_pairs);
+        trialNumbers.push(trial.trial_number);
+    });
 
-  async showOutcome(outcome) {
-    this.canvas.clear()
-    this.recordEvent("outcome", {outcome})
-    // it's good to check this.status before showing alerts specifically
-    // because they will show up even if the component's div has been removed
-    if (outcome == "win") {
-      await alert_success()
-    } else {
-      await alert_failure()
-    }
-  }
+    // Set up the current trial index
+    var currentIndex = 0;
+    var num_solves = 0;
+    var maze = mazes[currentIndex];
+    var threshold_hits = calculate_sum(maze, 1);
+    var threshold_solves = mazes.length;
+    var n = maze.length;
+    var num_hits = 1;
+    var score = 0;
+    var currentTrialScore = 6;  // Initialize current trial score
+    var cumScore = 0;
+    var FINAL_BOARD_EXP = false;
+    var board = init_board(n, starts[currentIndex][0][0], starts[currentIndex][0][1]);
+    var init_time = 0;
+    var done = false;
+    var listening = false;
+    var first_response = true;
+    // Create image objects
+    var image1 = new Image();
+    var image2 = new Image();
+    
+    // Function to update image sources for current trial
+    var updateImages = function() {
+        var currentPair = imagePairs[currentIndex];
+        image1.src = `/static/images/openmoji/${currentPair[0]}.svg`;
+        image2.src = `/static/images/openmoji/${currentPair[1]}.svg`;
+    };
+    
+    // Wait for images to load
+    var imagesLoaded = false;
+    var imagesToLoad = 2;
+    
+    var resetImageLoadCounter = function() {
+        imagesToLoad = 2;
+        imagesLoaded = false;
+    };
+    
+    image1.onload = function() {
+        imagesToLoad--;
+        if (imagesToLoad === 0) {
+            imagesLoaded = true;
+            draw_board();
+        }
+    };
+    
+    image2.onload = function() {
+        imagesToLoad--;
+        if (imagesToLoad === 0) {
+            imagesLoaded = true;
+            draw_board();
+        }
+    };
 
-  setTarget() {
-    this.targetX = uniformRandom(this.targetSize, this.screenWidth - this.targetSize)
-    this.targetY = uniformRandom(this.targetSize, this.screenHeight - this.targetSize)
-    this.recordEvent("setTarget", { x: this.targetX, y: this.targetY })
-    this.drawTarget()
-  }
+    // Initialize first pair of images
+    updateImages();
 
-  drawTarget(color="black") {
-    this.canvas.clear().drawCircle(
-      this.targetX,
-      this.targetY,
-      this.targetSize,
-      color
-    )
-  }
+    var clear_board = function() {
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        ctx.beginPath();
+        ctx.rect(0,0,576,576);
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.fill();
+        ctx.closePath(); 
+        document.getElementById("current").innerHTML=("Current Trial: "+(num_solves+1)+"/120");
+        document.getElementById("cumulative").innerHTML=("Points This Trial: "+currentTrialScore+"<br>Total Score: "+score);
+    };
 
-  isHit(x, y) {
-    const distance = Math.sqrt(Math.pow(x - this.targetX, 2) + Math.pow(y - this.targetY, 2))
-    return distance <= this.targetSize
-  }
-}
+    var draw_board = function() {
+        if (!imagesLoaded) return;
+        
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        
+        ctx.beginPath();
+        ctx.rect(0, 0, 576, 576);
+        ctx.fillStyle = 'rgb(255, 255, 255)';
+        ctx.fill();
+        ctx.closePath();
+        
+        var sq_size = 576/board.length;
+        for(var i = 0; i < board.length; i++) {
+            var row = board[i];
+            for(var j = 0; j < row.length; j++) {
+                ctx.beginPath();
+                ctx.lineWidth = "1";
+                ctx.strokeStyle = "black";
+                ctx.rect(j*sq_size, i*sq_size, sq_size, sq_size);
+                
+                if(board[i][j] == 0) {
+                    ctx.drawImage(image1, j*sq_size, i*sq_size, sq_size, sq_size);
+                }
+                else if(board[i][j] == -1) {
+                    ctx.fillStyle = 'rgb(155, 155, 155)';
+                    ctx.fill();
+                }
+                else if(board[i][j] == 1) {
+                    ctx.drawImage(image2, j*sq_size, i*sq_size, sq_size, sq_size);
+                }
+                
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+        
+        var currentPair = imagePairs[currentIndex];
+        document.getElementById("current").innerHTML = `-1 point: <img src="/static/images/openmoji/${currentPair[0]}.svg" width="30" height="30"> +1 point: <img src="/static/images/openmoji/${currentPair[1]}.svg" width="30" height="30"><br>Trial: ${num_solves}/120 ; Score: ${score}`;
+        document.getElementById("cumulative").innerHTML = "";
+    };
+
+    var final_board = function() {
+        if (!imagesLoaded) return;
+        
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        
+        ctx.beginPath();
+        ctx.rect(0, 0, 576, 576);
+        ctx.fillStyle = 'rgb(255, 255, 255)';
+        ctx.fill();
+        ctx.closePath();
+        
+        var sq_size = 576/maze.length;
+        for(var i = 0; i < maze.length; i++) {
+            var row = maze[i];
+            for(var j = 0; j < row.length; j++) {
+                ctx.beginPath();
+                ctx.lineWidth = "1";
+                ctx.strokeStyle = "black";
+                ctx.rect(j*sq_size, i*sq_size, sq_size, sq_size);
+                
+                if(maze[i][j] == 0) {
+                    ctx.drawImage(image1, j*sq_size, i*sq_size, sq_size, sq_size);
+                }
+                else if(maze[i][j] == -1) {
+                    ctx.fillStyle = 'rgb(155, 155, 155)';
+                    ctx.fill();
+                }
+                else if(maze[i][j] == 1) {
+                    ctx.drawImage(image2, j*sq_size, i*sq_size, sq_size, sq_size);
+                }
+                
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+        
+        var currentPair = imagePairs[currentIndex];
+        if(num_solves+1 > threshold_solves) {
+            document.getElementById("current").innerHTML = `0 point: <img src="/static/images/openmoji/${currentPair[0]}.svg" width="30" height="30"> 1 point: <img src="/static/images/openmoji/${currentPair[1]}.svg" width="30" height="30"><br>Trial: ${num_solves}/120 ; Score: ${score}; Total Score: ${cumScore}`;
+            document.getElementById("cumulative").innerHTML = "You got them all!";
+        }
+        else {
+            document.getElementById("cumulative").innerHTML = "You got them all!" 
+        }
+    };
+
+    var show_break = function() {
+        listening = false;
+        var completed = num_solves;
+        var total = threshold_solves;
+        
+        // Hide the canvas and current score display
+        document.getElementById("myCanvas").style.display = "none";
+        document.getElementById("current").style.display = "none";
+        document.getElementById("cumulative").style.display = "none";
+        
+        // Create break content
+        var breakContent = `
+            <div class="break-page" style="text-align: center; padding: 20px; max-width: 600px; margin: 0 auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h1>Take a Break</h1>
+                <p>You've completed ${completed} out of ${total} trials.</p>
+                <p>Take a moment to rest. When you're ready to continue, click the button below.</p>
+                <button id="continue-btn" style="padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Continue</button>
+            </div>
+        `;
+        
+        // Create and append break overlay
+        var breakOverlay = document.createElement('div');
+        breakOverlay.id = 'break-overlay';
+        breakOverlay.innerHTML = breakContent;
+        document.body.appendChild(breakOverlay);
+        
+        // Add click handler for continue button
+        document.getElementById('continue-btn').addEventListener('click', function() {
+            // Remove the break overlay
+            document.body.removeChild(breakOverlay);
+            
+            // Show the canvas and score display again
+            document.getElementById("myCanvas").style.display = "block";
+            document.getElementById("current").style.display = "block";
+            document.getElementById("cumulative").style.display = "block";
+            
+            // Continue with next trial
+            maze = mazes[currentIndex];
+            threshold_hits = calculate_sum(maze, 1); 
+            num_hits = 1; 
+            listening = true; 
+            board = init_board(n, starts[currentIndex][0][0], starts[currentIndex][0][1]);
+            
+            resetImageLoadCounter();
+            updateImages();
+            
+            clear_board();
+            draw_board();
+            
+            // Re-register the response handler
+            $("body").focus().click(response_handler);
+        });
+    };
+
+    var go_next_game = function() {
+        currentIndex += 1;  // Increment to move to next trial
+        
+        // Check if we should end the experiment
+        if (num_solves > threshold_solves) {
+            finish();  // This will end the game and go to post-questionnaire
+            return;
+        }
+        
+        // Check if we should show a break
+        if (currentIndex > 0 && currentIndex % BREAK_INTERVAL === 0) {
+            show_break();
+            return;
+        }
+        
+        maze = mazes[currentIndex];
+        threshold_hits = calculate_sum(maze, 1); 
+        num_hits = 1; 
+        listening = true; 
+        board = init_board(n, starts[currentIndex][0][0], starts[currentIndex][0][1]);
+        
+        resetImageLoadCounter();
+        updateImages();
+        
+        clear_board();
+        draw_board();
+    };
+
+    var go_final_game = function() {
+        // Since we're using JSON configuration, we should just end the experiment
+        listening = false;
+        final_board();
+        finish();  // This will end the game and go to post-questionnaire
+    };
+
+    var next = async function() {
+        if(num_hits == threshold_hits) {     
+            num_solves += 1;
+
+            if(num_solves >= threshold_solves) {
+                listening = false; 
+                final_board();
+                await new Promise(r => setTimeout(r, 2000));
+                finish();  // This will end the game and go to post-questionnaire
+                return;  // Exit the function to prevent further execution
+            } else {
+                listening = false;
+                cumScore += score; 
+                final_board();
+                await new Promise(r => setTimeout(r, 2000));
+                score = 0;
+                currentTrialScore = 6;  // Reset current trial score
+                go_next_game();
+            } 
+        }
+        else { 
+            listening = true;
+            draw_board(); 
+        }
+    };
+
+    var response_handler = function(e) {
+        if(first_response) {
+            init_time = e.timeStamp;
+            first_response = false;
+            return;
+        }
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        if(!listening) {
+            return;
+        }
+        var size = 576.0/n; 
+        
+        if(e.target.tagName.toLowerCase() != 'canvas') {
+            return;
+        }
+        e.preventDefault();
+        mouseX = e.offsetX;
+        mouseY = e.offsetY;
+        var c = parseInt(mouseX/size);
+        var r = parseInt(mouseY/size);
+
+        var reward = 0;
+        if(c < 0 || c > n || r < 0 || r > n) {
+            return;
+        }
+        if(board[r][c] == -1) {
+            if(maze[r][c] == 1) {
+                reward = 1;
+                board[r][c] = 1;
+                num_hits += 1;
+                score = score + 1;
+            }
+            else {
+                reward = -1;
+                board[r][c] = 0; 
+                score = score - 1;
+                currentTrialScore = currentTrialScore - 1;  // Update current trial score
+            }
+        }
+
+        var cond_num = 1;
+        if(condition) {
+            cond_num = 1;
+        }
+        else {
+            cond_num = 0;
+        }
+        if (FINAL_BOARD_EXP == false) {
+            psiTurk.recordTrialData([trialNumbers[currentIndex], r, c, cond_num, reward, e.timeStamp-init_time]);
+        }
+        else {
+            psiTurk.recordTrialData(["FINAL_BOARD", r, c, cond_num, reward, e.timeStamp-init_time]);
+        }
+        listening = false;
+        next();
+    };
+
+    var finish = function() {
+        $("body").unbind("click", response_handler);
+        currentview = new Questionnaire();
+    };
+
+    // Load the stage.html snippet into the body of the page
+    psiTurk.showPage('stage2.html');
+
+    // Register the response handler
+    $("body").focus().click(response_handler); 
+
+    // Start the test
+    next();
+};
+
+
+
+/****************
+* Questionnaire *
+****************/
+
+var Questionnaire = function() {
+
+  var error_message = "<h1>Oops!</h1><p>Something went wrong submitting your HIT. This might happen if you lose your internet connection. Press the button to resubmit.</p><button id='resubmit'>Resubmit</button>";
+
+  record_responses = function() {
+
+    psiTurk.recordTrialData({'phase':'postquestionnaire', 'status':'submit'});
+
+    $('textarea').each( function(i, val) {
+      psiTurk.recordUnstructuredData(this.id, this.value);
+    });
+    $('select').each( function(i, val) {
+      psiTurk.recordUnstructuredData(this.id, this.value);    
+    });
+
+  };
+
+  prompt_resubmit = function() {
+    document.body.innerHTML = error_message;
+    $("#resubmit").click(resubmit);
+  };
+
+  resubmit = function() {
+    document.body.innerHTML = "<h1>Trying to resubmit...</h1>";
+    reprompt = setTimeout(prompt_resubmit, 10000);
+    
+    psiTurk.saveData({
+      success: function() {
+          clearInterval(reprompt); 
+          psiTurk.showPage('finishprolific.html');
+           }, 
+      error: prompt_resubmit
+    });
+  };
+
+  // Load the questionnaire snippet 
+  psiTurk.showPage('postquestionnaire.html');
+  psiTurk.recordTrialData({'phase':'postquestionnaire', 'status':'begin'});
+  
+  $("#next").click(function () {
+      record_responses();
+      psiTurk.saveData({
+            success: function(){
+                psiTurk.showPage('finishprolific.html');
+            }, 
+            error: prompt_resubmit});  
+  });   
+    
+  
+};
+
+// Task object to keep track of the current phase
+var currentview;
+
+/*******************
+ * Run Task
+ ******************/
+/*
+ $(window).on('load', async () => { 
+  await init;
+  psiTurk.doInstructions(
+    instructionPages, // a list of pages you want to display in sequence
+    function() { currentview = new TextExperiment();   } // what you want to do when you are done with instructions
+  );
+});  
+*/
+
+
+$(window).on('load', async () => { 
+    await init;
+    psiTurk.doInstructions(
+      instructionPages, // a list of pages you want to display in sequence
+      function() { currentview = new GridWorldExperiment(); } // what you want to do when you are done with instructions
+    );
+});  
+

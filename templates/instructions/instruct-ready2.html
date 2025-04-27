@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Instructions</title>
+        <link rel="stylesheet" href="/static/css/style.css" />
+        <style>
+            .final-example {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 20px 0;
+                gap: 40px;
+            }
+            .interface-preview {
+                border: 1px solid #ddd;
+                padding: 15px;
+                border-radius: 5px;
+                background: #fff;
+                text-align: center;
+            }
+            .symbol-display {
+                display: flex;
+                gap: 20px;
+                justify-content: center;
+                margin: 10px 0;
+            }
+            .symbol-box {
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .center {
+                text-align: center;
+                font-size: 1.2em;
+                margin-top: 20px;
+                font-weight: bold;
+            }
+            .key-points {
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container-instructions">
+            <h1>Ready to Begin!</h1>
+            
+            <hr />
+
+            <div class="instructions well">
+                <div class="final-example">
+                    <div class="interface-preview">
+                        <h3>Game Interface</h3>
+                        <div class="symbol-display">
+                            <div class="symbol-box">
+                                <span>💡</span>
+                                <span>-1 point</span>
+                            </div>
+                            <div class="symbol-box">
+                                <span>🚲</span>
+                                <span>+1 point</span>
+                            </div>
+                        </div>
+                        <p><small>These symbols will be shown at the top of your screen</small></p>
+                    </div>
+                </div>
+
+                <div class="key-points">
+                    <h3>Key Points to Remember:</h3>
+                    <ul>
+                        <li>Look for patterns in how the correct symbols (🚲) are arranged</li>
+                        <li>Avoid clicking on incorrect symbols (💡) to maintain your score</li>
+                        <li>Take advantage of the breaks every 10 trials</li>
+                        <li>The experiment has 120 trials in total</li>
+                        <li>Your total score accumulates across all trials</li>
+                    </ul>
+                </div>
+                
+                <p class="center">
+                    Click "Begin" when you're ready to start!
+                </p>
+            </div>
+
+            <hr />
+
+            <div class="instructionsnav">
+                <div class="row">
+                    <div class="col-xs-2">
+                        <button type="button" id="prev" value="prev" class="btn btn-primary btn-lg continue">
+                            <span class="glyphicon glyphicon-arrow-left"></span> Previous
+                        </button>
+                    </div>
+                    <div class="col-xs-8">
+                    </div>
+                    <div class="col-xs-2">
+                        <button type="button" id="next" value="next" class="btn btn-primary btn-lg continue">
+                            Begin <span class="glyphicon glyphicon-arrow-right"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html> 

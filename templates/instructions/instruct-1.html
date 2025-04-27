@@ -1,45 +1,119 @@
-<div id="container-instructions">
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Instructions</title>
+        <link rel="stylesheet" href="/static/css/style.css" />
+        <style>
+            .example-container {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                gap: 30px;
+                margin: 20px 0;
+                flex-wrap: wrap;
+            }
+            .example-box {
+                border: 1px solid #ddd;
+                padding: 15px;
+                border-radius: 5px;
+                background: #fff;
+                text-align: center;
+                width: 300px;
+            }
+            .example-image {
+                max-width: 100%;
+                height: auto;
+                margin: 10px auto;
+                border: 1px solid #ccc;
+            }
+            .score-display {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                margin: 15px 0;
+            }
+            .score-item {
+                text-align: center;
+            }
+            .score-value {
+                font-weight: bold;
+                margin-top: 5px;
+            }
+            .positive {
+                color: green;
+            }
+            .negative {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container-instructions">
+            <h1>Welcome to the Grid World Experiment!</h1>
+            
+            <hr />
 
-	<h1>Instructions</h1>
+            <div class="instructions well">
+                <p>
+                    In this experiment, you will explore a grid world by revealing hidden symbols. Here's how to play:
+                </p>
 
-	<hr />
+                <div class="example-container">
+                    <div class="example-box">
+                        <h3>Starting Position</h3>
+                        <img src="/static/images/start_example.png" alt="Starting Position" class="example-image">
+                        <p><small>You start with one revealed +1 symbol.<br>Grey squares are hidden symbols.</small></p>
+                    </div>
 
-	<div class="instructions well">
+                    <div class="example-box">
+                        <h3>Gameplay</h3>
+                        <img src="/static/images/board_example.png" alt="Board Example" class="example-image">
+                        <p><small>Move your mouse and click to reveal symbols.<br>Find all +1 symbols to complete the trial.</small></p>
+                    </div>
 
-	    <p>
-		    This is the first page of instructions.
-	    </p>
-	    
-	    <p>
-	    	Be helpful, clear.
-        </p>
+                    <div class="example-box">
+                        <h3>Scoring System</h3>
+                        <img src="/static/images/score_example.png" alt="Scoring Example" class="example-image">
+                        <div class="score-display">
+                            <div class="score-item">
+                                <div class="score-value positive">+1 point</div>
+                                <small>Correct symbol</small>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value negative">-1 point</div>
+                                <small>Incorrect symbol</small>
+                            </div>
+                        </div>
+                        <p><small>Goal: Find all +1 symbols while avoiding -1 symbols<br>to maximize your score</small></p>
+                    </div>
+                </div>
 
-        <p>
-        	Use images and concrete examples.
-        </p>
-
-	    <script type="text/javascript">
-	    //console.log(psiTurk.getInstructionIndicator())
-	    </script>
-
-	</div>
-
-	<hr />
-
-
-    <div class="instructionsnav">
-        <div class="row">
-            <div class="col-xs-2">
-            	<!-- no previous button on first screen -->
+                <ul>
+                    <li>Each trial begins with one revealed +1 symbol.</li>
+                    <li>Move your mouse and click grey squares to reveal hidden symbols.</li>
+                    <li>Your goal is to find all +1 symbols while revealing as few -1 symbols as possible.</li>
+                    <li>The trial ends when you find all +1 symbols.</li>
+                    <li>You will complete 120 trials in total, with breaks every 10 trials.</li>
+                </ul>
             </div>
-            <div class="col-xs-8">
-            </div>
-            <div class="col-xs-2">
-                <button type="button" id="next" value="next" class="btn btn-primary btn-lg continue">
-                Next <span class="glyphicon glyphicon-arrow-right"></span>
-                </button>
+
+            <hr />
+
+            <div class="instructionsnav">
+                <div class="row">
+                    <div class="col-xs-2">
+                        <!-- no previous button on first screen -->
+                    </div>
+                    <div class="col-xs-8">
+                    </div>
+                    <div class="col-xs-2">
+                        <button type="button" id="next" value="next" class="btn btn-primary btn-lg continue">
+                            Next <span class="glyphicon glyphicon-arrow-right"></span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-</div>
+    </body>
+</html> 

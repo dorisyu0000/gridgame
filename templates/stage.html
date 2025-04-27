@@ -1,8 +1,61 @@
-<div id="container-exp">
-	<div id="trial">
-		<h1>Respond Quickly!</h1>
-		<p>What color is this word?</p>
-		<div id="stim"></div>
-		<div id="query"></div>
-	</div>
+<div id="container-instructions">
+
+    <h1>Instructions</h1>
+
+    <hr />
+
+    <div class="instructions well">
+
+        <p>
+            Congrats on finishing the first stage. This page will now describe the second stage.  
+        </p>
+        
+        <p>
+            In this stage, you will be attempting to generate similar shapes to the ones you've seen in the game's first stage. 
+        </p>
+
+        <p>
+            Like the first stage, you will be presented with a 7x7 grid of tiles. This time, they will be mostly <b>grey</b>. Your job is to fill-in the grey tiles to create shapes that look like the ones you've seen on the previous stage. To fill-in a grey tile, simply click on the tile. Clicking once will make it blue and clicking again will make it red. Any subsequent clicks on the same tile will flip the color. 
+        </p>
+
+        <p>
+            Some of the tiles have already been filled in as red/blue tiles. These are indicated by the tiles' thicker borders. You are not able to change these tiles.  
+        </p>
+
+        <p>
+            There are a total of <b>5</b> grids you have to complete. Once you've finished filling in all grey tiles, press <b>enter</b> to move on to the next grid. Note: <b>you cannot move on until you've finished filling in all grey tiles</b>. When you are ready, click the button to start the experiment. 
+        </p>
+
+
+        <script type="text/javascript">
+        //console.log(psiTurk.getInstructionIndicator())
+        </script>
+
+    </div>
+
+    <hr />
+
+    <div class="instructionsnav">
+        <div class="row">
+            <div class="col-xs-2">
+                <!--  Maybe not previous button on this screen? -->
+                <!--
+                <button type="button" id="next" value="next" class="btn btn-primary btn-lg previous">
+                <span class="glyphicon glyphicon-arrow-left"></span> Previous
+                </button>
+                -->
+            </div>
+            <div class="col-xs-8">
+                <center>
+                    <button type="button" id="next" value="next" >
+                    Begin game  
+                    </button>
+                </center>
+            </div>
+            <div class="col-xs-2">
+
+            </div>
+        </div>
+    </div>
+
 </div>

@@ -1,0 +1,83 @@
+{% macro button_box(id) %}
+    <button
+        id="{{ id }}"
+        type="button"
+        class="color_box response submit"
+        onload="this.style.background-color"
+        style="background-color: {% if id == 0 %} blue {% else %} red {% endif %}"
+    ></button>
+
+{% endmacro %}
+
+{% macro board_2afc(config) %}
+    <style>
+        .board_box_container {
+            display: flex;
+            justify-content: center;
+        }
+        .color_box {
+            width: 50px;
+            height: 50px;
+            margin: 15px;
+            border-style: none;
+        }
+    </style>
+
+    <div class="board_box_container">
+        {{ button_box(config.boards[1]) }}
+        {{ button_box(config.boards[2]) }}
+    </div>
+
+    <div class="board_box_container">
+        <canvas class="canvasboard" id="{{ config.boards[0] }}" width="300px" height="300px"></canvas> 
+    </div>
+
+    <script type = "text/javascript" src = "/static/scripts/boards.js"></script>
+
+    <script>
+        // original canvas size for 7x7 is 450px
+        // canvas size for 4x4 is 300px
+        var response_handler=function(e) {
+            if(e.target.tagName.toLowerCase()!='canvas') {
+                return;
+            }
+            for(let m=0;m<all_canvases.length;m++) {
+                var canvas=all_canvases[m];
+                var ctx=canvas.getContext("2d");
+                const size=50;
+                e.preventDefault();
+                mouseX=e.offsetX;
+                mouseY=e.offsetY;
+                var c=parseInt(mouseX/size);
+                var r=parseInt(mouseY/size);
+                if(c<0 || c>7 || r<0 || r>7) {
+                    return;
+                }
+                board_state = JSON.parse(canvas.id);
+
+                var linear_idx=r*board_dim+c; 
+                if (board_state[linear_idx]==-1 ){
+                    board_state[linear_idx]=-2;
+                }
+                else if(board_state[linear_idx]==-2) {
+                    board_state[linear_idx]=2;
+                }
+                else if(board_state[linear_idx]==2) {
+                    board_state[linear_idx]=-2;
+                }
+                canvas.id=board_state; //Write to canvas id?
+            }
+            draw_board();
+        }
+        window.onload = function() {
+            draw_board();
+        }
+
+        $( ".color_box" ).on("click", function() {
+            $(this).addClass("color_box_disabled");
+            var answer = JSON.parse(this.id);
+            psynet.next_page(answer);
+        })
+
+    </script>
+{% endmacro %}

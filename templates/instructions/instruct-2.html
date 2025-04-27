@@ -1,43 +1,100 @@
-<div id="container-instructions">
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Instructions</title>
+        <link rel="stylesheet" href="/static/css/style.css" />
+        <style>
+            .instructions-content {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .section {
+                margin-bottom: 30px;
+            }
+            .score-display {
+                background: #fff;
+                border: 1px solid #ccc;
+                padding: 10px;
+                margin: 10px 0;
+                border-radius: 4px;
+                font-family: monospace;
+                display: inline-block;
+            }
+            h3 {
+                margin-bottom: 15px;
+            }
+            ul {
+                margin-bottom: 20px;
+            }
+            li {
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container-instructions">
+            <h1>How to Play</h1>
+            
+            <hr />
 
-    <h1>Instructions</h1>
+            <div class="instructions well">
+                <div class="instructions-content">
+                    <div class="section">
+                        <h3>During Each Trial:</h3>
+                        <ul>
+                            <li>Start with 6 points at the beginning of each trial</li>
+                            <li>Click to reveal hidden symbols:
+                                <ul>
+                                    <li>Finding a +1 symbol: Keep your points</li>
+                                    <li>Finding a -1 symbol: Lose one point</li>
+                                </ul>
+                            </li>
+                            <li>Trial ends when you find all +1 symbols</li>
+                        </ul>
+                    </div>
 
-    <hr />
+                    <div class="section">
+                        <h3>Score Example:</h3>
+                        <div class="score-display">
+                            Current Trial: 2/120<br>
+                            Score: 6<br>
+                            Cumulative Score: 3
+                        </div>
+                    </div>
 
-    <div class="instructions well">
-
-        <p>
-            This is the second page of instructions
-        </p>
-
-        <p>
-            Put some text in this paragraph
-        </p>
-
-
-        <script type="text/javascript">
-        //console.log(psiTurk.getInstructionIndicator())
-        </script>
-
-    </div>
-
-    <hr />
-
-    <div class="instructionsnav">
-        <div class="row">
-            <div class="col-xs-2">
-                <button type="button" id="prev" value="prev" class="btn btn-primary btn-lg previous">
-                <span class="glyphicon glyphicon-arrow-left"></span> Previous
-                </button>
+                    <div class="section">
+                        <h3>Tips:</h3>
+                        <ul>
+                            <li>Your score carries over between trials</li>
+                            <li>Try to find +1 symbols efficiently</li>
+                            <li>Avoid clicking on -1 symbols when possible</li>
+                            <li>Take your time to think about where to click</li>
+                            <li>You'll get breaks every 10 trials to rest</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="col-xs-8">
-            </div>
-            <div class="col-xs-2">
-                <button type="button" id="next" value="next" class="btn btn-primary btn-lg continue">
-                Next <span class="glyphicon glyphicon-arrow-right"></span>
-                </button>
+
+            <hr />
+
+            <div class="instructionsnav">
+                <div class="row">
+                    <div class="col-xs-2">
+                        <button type="button" id="prev" value="prev" class="btn btn-primary btn-lg previous">
+                            <span class="glyphicon glyphicon-arrow-left"></span> Previous
+                        </button>
+                    </div>
+                    <div class="col-xs-8">
+                    </div>
+                    <div class="col-xs-2">
+                        <button type="button" id="next" value="next" class="btn btn-primary btn-lg continue">
+                            Next <span class="glyphicon glyphicon-arrow-right"></span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-</div>
+    </body>
+</html> 
