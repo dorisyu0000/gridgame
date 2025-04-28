@@ -80,6 +80,12 @@ var GridWorldExperiment = function() {
     var condition=Math.floor(Math.random() * 10) + 1;  // Random condition from 1-10
     var BREAK_INTERVAL = 10;  // Show break every 10 trials
 
+    // Record experiment initialization
+    DATA.recordEvent('experiment.start', {
+        condition: condition,
+        timestamp: Date.now()
+    });
+
     // Load configuration from JSON file
     var config = null;
     var xhr = new XMLHttpRequest();
@@ -289,12 +295,11 @@ var GridWorldExperiment = function() {
         document.getElementById("current").style.display = "none";
         document.getElementById("cumulative").style.display = "none";
         
-        // Create break content with score
+        // Create break content
         var breakContent = `
             <div class="break-page" style="text-align: center; padding: 20px; max-width: 600px; margin: 0 auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 <h1>Take a Break</h1>
                 <p>You've completed ${completed} out of ${total} trials.</p>
-                <p>Your current total score is: <span style="font-weight: bold; font-size: 1.2em; color: #4CAF50;">${cumScore}</span></p>
                 <p>Take a moment to rest. When you're ready to continue, click the button below.</p>
                 <button id="continue-btn" style="padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Continue</button>
             </div>
@@ -337,6 +342,16 @@ var GridWorldExperiment = function() {
     var go_next_game = function() {
         currentIndex += 1;  // Increment to move to next trial
         
+        // Record trial initialization
+        DATA.recordEvent('trial.start', {
+            trial_number: currentIndex,
+            grid: maze,
+            threshold_hits: threshold_hits,
+            score: score,
+            cumulative_score: cumScore,
+            timestamp: Date.now()
+        });
+        
         // Check if we should end the experiment
         if (num_solves > threshold_solves) {
             finish();  // This will end the game and go to post-questionnaire
@@ -373,6 +388,16 @@ var GridWorldExperiment = function() {
         if(num_hits == threshold_hits) {     
             num_solves += 1;
 
+            // Record trial completion
+            DATA.recordEvent('trial.complete', {
+                trial_number: currentIndex,
+                score: score,
+                cumulative_score: cumScore,
+                time_taken: Date.now() - init_time,
+                timestamp: Date.now()
+            });
+            DATA.save();
+            
             if(num_solves >= threshold_solves) {
                 listening = false; 
                 final_board();
@@ -436,6 +461,17 @@ var GridWorldExperiment = function() {
             }
         }
 
+        // Record click event
+        DATA.recordEvent('trial.click', {
+            trial_number: currentIndex,
+            pos: [r, c],
+            reward: reward,
+            current_score: score,
+            cumulative_score: cumScore,
+            time: e.timeStamp - init_time,
+            timestamp: Date.now()
+        });
+
         var cond_num = 1;
         if(condition) {
             cond_num = 1;
@@ -454,8 +490,16 @@ var GridWorldExperiment = function() {
     };
 
     var finish = function() {
+        // Record experiment completion
+        DATA.recordEvent('experiment.complete', {
+            final_score: cumScore,
+            total_trials: num_solves,
+            timestamp: Date.now()
+        });
+
         $("body").unbind("click", response_handler);
         currentview = new Questionnaire();
+        DATA.save();
     };
 
     // Load the stage.html snippet into the body of the page

@@ -37,10 +37,12 @@ BAD = 8
 @custom_code.route('/')
 def demo():
     data = {
-        key: "{{ " + key + " }}"
-        for key in ['uniqueId', 'condition', 'counterbalance', 'adServerLoc', 'mode']
+        'uniqueId': 'demo',
+        'condition': '1',
+        'counterbalance': '1',
+        'adServerLoc': '/sync',
+        'mode': 'demo'
     }
-    data['mode'] = 'demo'
     return render_template('exp.html', **data)
 
 
