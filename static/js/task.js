@@ -77,8 +77,6 @@ var calculate_sum=function(b,t) {
 };
 
 var GridWorldExperiment = function() {     
-    var all_rules=['translation','symmetry','connected','rectangle','tree','pyramid','zigzag','cross','tree2','translation2','translation3','gsp_4x4']
-    var rule='connected';     
     var condition=Math.floor(Math.random() * 10) + 1;  // Random condition from 1-10
     var BREAK_INTERVAL = 10;  // Show break every 10 trials
 
@@ -129,7 +127,7 @@ var GridWorldExperiment = function() {
     var num_solves = 0;
     var maze = mazes[currentIndex];
     var threshold_hits = calculate_sum(maze, 1);
-    var threshold_solves = mazes.length;
+    var threshold_solves = 10;
     var n = maze.length;
     var num_hits = 1;
     var score = 0;
@@ -218,7 +216,7 @@ var GridWorldExperiment = function() {
                 }
                 else if(board[i][j] == -1) {
                     ctx.fillStyle = 'rgb(155, 155, 155)';
-                    ctx.fill();
+                    ctx.fill(); 
                 }
                 else if(board[i][j] == 1) {
                     ctx.drawImage(image2, j*sq_size, i*sq_size, sq_size, sq_size);
@@ -230,7 +228,7 @@ var GridWorldExperiment = function() {
         }
         
         var currentPair = imagePairs[currentIndex];
-        document.getElementById("current").innerHTML = `-1 point: <img src="/static/images/openmoji/${currentPair[0]}.svg" width="30" height="30"> +1 point: <img src="/static/images/openmoji/${currentPair[1]}.svg" width="30" height="30"><br>Trial: ${num_solves}/120 ; Score: ${score}`;
+        document.getElementById("current").innerHTML = `+1 point: <img src="/static/images/openmoji/${currentPair[1]}.svg" width="30" height="30"> -1 point: <img src="/static/images/openmoji/${currentPair[0]}.svg" width="30" height="30"><br>Trial: ${num_solves}/120 ; Score: ${score}`;
         document.getElementById("cumulative").innerHTML = "";
     };
 
@@ -273,12 +271,12 @@ var GridWorldExperiment = function() {
         
         var currentPair = imagePairs[currentIndex];
         if(num_solves+1 > threshold_solves) {
-            document.getElementById("current").innerHTML = `0 point: <img src="/static/images/openmoji/${currentPair[0]}.svg" width="30" height="30"> 1 point: <img src="/static/images/openmoji/${currentPair[1]}.svg" width="30" height="30"><br>Trial: ${num_solves}/120 ; Score: ${score}; Total Score: ${cumScore}`;
-            document.getElementById("cumulative").innerHTML = "You got them all!";
-        }
-        else {
-            document.getElementById("cumulative").innerHTML = "You got them all!" 
-        }
+          document.getElementById("current").innerHTML = `+1 point: <img src="/static/images/openmoji/${currentPair[1]}.svg" width="30" height="30"> -1 point: <img src="/static/images/openmoji/${currentPair[0]}.svg" width="30" height="30"><br>Trial: ${num_solves}/120 ; Score: ${score}`;
+          document.getElementById("cumulative").innerHTML = `You got them all! Your total score is ${cumScore}`;
+      }
+      else {
+          document.getElementById("cumulative").innerHTML = `You got them all! Your total score is ${cumScore}`;
+      }
     };
 
     var show_break = function() {
@@ -291,11 +289,12 @@ var GridWorldExperiment = function() {
         document.getElementById("current").style.display = "none";
         document.getElementById("cumulative").style.display = "none";
         
-        // Create break content
+        // Create break content with score
         var breakContent = `
             <div class="break-page" style="text-align: center; padding: 20px; max-width: 600px; margin: 0 auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                 <h1>Take a Break</h1>
                 <p>You've completed ${completed} out of ${total} trials.</p>
+                <p>Your current total score is: <span style="font-weight: bold; font-size: 1.2em; color: #4CAF50;">${cumScore}</span></p>
                 <p>Take a moment to rest. When you're ready to continue, click the button below.</p>
                 <button id="continue-btn" style="padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Continue</button>
             </div>
