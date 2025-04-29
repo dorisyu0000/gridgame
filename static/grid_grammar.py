@@ -194,7 +194,6 @@ def generate_grid(rules=None, trial_index=None, image_pairs=None, repeat_index=N
 
     grid = np.zeros((n, n)).astype('int')
     start = np.random.choice(list(range(2, n-1)), size=2)
-    print(start)
     grid[start[0], start[1]] = 2345 
 
     while np.sum(grid > 1) > 0:
@@ -203,7 +202,6 @@ def generate_grid(rules=None, trial_index=None, image_pairs=None, repeat_index=N
         else:
             grid[grid > 1] = 1
     starts = generate_reveal(grid = grid, start = start.tolist(), n = n, reveal_n = 1)
-    print(starts)
     return {"grid": grid.tolist(), "start": starts, "n": n, "rule": rule, "trial_number": trial_index, "image_pairs": image_pairs, "repeat_index": repeat_index}
 
 def generate_locolizer(rules = None, reveal_n = 1, n=7):
@@ -252,7 +250,6 @@ def generate_reveal(grid, start, reveal_n=3, n=7):
     if possible_starts:
         selected_start = random.choice(possible_starts)
         starts = [[selected_start[0] + x, selected_start[1] + y] for x in range(reveal_n) for y in range(reveal_n)]
-    print(starts)
     return starts
 
 
@@ -262,20 +259,44 @@ def save_json(data, filename, folder_path):
         json.dump(data, json_file, indent=4)
     print(f'Data successfully saved to {file_path}')
 
-imagePair = [[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],[1,9],[1,10],[1,11],[1,12],[1,13],[1,14],[1,15],
-[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,9],[2,10],[2,11],[2,12],[2,13],[2,14],[2,15],    
-[3,4],[3,5],[3,6],[3,7],[3,8],[3,9],[3,10],[3,11],[3,12],[3,13],[3,14],[3,15],
-[4,5],[4,6],[4,7],[4,8],[4,9],[4,10],[4,11],[4,12],[4,13],[4,14],[4,15],
-[5,6],[5,7],[5,8],[5,9],[5,10],[5,11],[5,12],[5,13],[5,14],[5,15],
-[6,7],[6,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[6,15],
-[7,8],[7,9],[7,10],[7,11],[7,12],[7,13],[7,14],[7,15],
-[8,9],[8,10],[8,11],[8,12],[8,13],[8,14],[8,15],
-[9,10],[9,11],[9,12],[9,13],[9,14],[9,15],
-[10,11],[10,12],[10,13],[10,14],[10,15],
-[11,12],[11,13],[11,14],[11,15],
-[12,13],[12,14],[12,15],
-[13,14],[13,15],
-[14,15]]
+def generate_image_pairs():
+    # Create a list of numbers from 1 to 200
+    available_numbers = list(range(1, 201))
+    # Shuffle the numbers randomly
+    random.shuffle(available_numbers)
+    
+    # Create pairs by taking numbers two at a time
+    pairs = []
+    used_numbers = set()  # Track used numbers
+    
+    for i in range(0, len(available_numbers) - 1, 2):
+        num1 = available_numbers[i]
+        num2 = available_numbers[i + 1]
+        
+        # Verify these numbers haven't been used before
+        if num1 in used_numbers or num2 in used_numbers:
+            raise ValueError(f"Numbers {num1} or {num2} have already been used!")
+            
+        used_numbers.add(num1)
+        used_numbers.add(num2)
+        pairs.append([num1, num2])
+    
+    # Verify all numbers were used exactly once
+    if len(used_numbers) != 200:
+        raise ValueError("Not all numbers from 1-200 were used!")
+        
+    # Verify no duplicates
+    if len(used_numbers) != len(set(used_numbers)):
+        raise ValueError("Duplicate numbers found!")
+    
+    return pairs
+
+imagePair = generate_image_pairs()
+
+# Verify the pairs
+print(f"Total pairs generated: {len(imagePair)}")
+print(f"Total unique numbers used: {len(set(num for pair in imagePair for num in pair))}")
+print(f"Numbers used: {sorted(set(num for pair in imagePair for num in pair))}")
 
 if __name__=='__main__':
 
@@ -308,9 +329,9 @@ if __name__=='__main__':
             pair_index += 1
             
             # 1/6 chance to repeat a previous trial
-            if len(main) >= 5 and random.random() < 1/6:
+            if len(main) >= 10 and random.random() < 1/5:
                 # Choose a trial from 4-8 trials back
-                lookback = random.randint(4, 8)
+                lookback = random.randint(10, 15)
                 if len(main) >= lookback:
                     potential_repeat = main[-lookback]
                     # Only repeat if this trial hasn't been repeated before

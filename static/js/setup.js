@@ -1,3 +1,21 @@
+console.log('Loading setup.js...');
+
+// Helper function for assertions
+function assert(condition, message) {
+    if (!condition) {
+        throw new Error(message || "Assertion failed");
+    }
+}
+
+// Helper function to parse JSON strings
+function maybeJson(value) {
+    try {
+        return JSON.parse(value);
+    } catch (e) {
+        return value;
+    }
+}
+
 var ERROR_EMAIL = 'EMAIL NOT FOUND' // I really hope you set this in experiment.js
 var PROLIFIC_CODE = null
 var COMPLETION_LINK = null

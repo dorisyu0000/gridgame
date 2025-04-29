@@ -6,10 +6,8 @@
 
 // Initalize psiturk object
 var psiTurk = new PsiTurk(uniqueId, adServerLoc, mode); 
-
 var mycondition = condition;  // these two variables are passed by the psiturk server process
 var mycounterbalance = counterbalance;  // they tell you which condition you have been assigned to
-// they are not used in the stroop code but may be useful to you
 
 // All pages to be loaded
 var pages = [  
@@ -30,30 +28,13 @@ const init = (async () => {
 })()
 
 
-var instructionPages = [ // add as a list as many pages as you like
-  //"instructions/instruct-ready2.html"
+var instructionPages = [ 
   "instructions/instruct-1.html",
   "instructions/instruct-2.html",
   "instructions/instruct-readytext.html",
 ]; 
 
-// Here
 
-
-
-/********************
-* HTML manipulation
-*
-* All HTML files in the templates directory are requested 
-* from the server when the PsiTurk object is created above. We
-* need code to get those pages from the PsiTurk object and 
-* insert them into the document.
-*
-********************/
-
-/********************
-* STROOP TEST       *
-********************/
 
 
 
@@ -77,14 +58,22 @@ var calculate_sum=function(b,t) {
 };
 
 var GridWorldExperiment = function() {     
+    console.log('GridWorldExperiment constructor called');
+    console.log('DATA:', DATA);
+    
     var condition=Math.floor(Math.random() * 10) + 1;  // Random condition from 1-10
     var BREAK_INTERVAL = 10;  // Show break every 10 trials
-
+      
     // Record experiment initialization
-    DATA.recordEvent('experiment.start', {
-        condition: condition,
-        timestamp: Date.now()
-    });
+    if (typeof DATA !== 'undefined' && DATA.recordEvent) {
+        console.log('Recording experiment start');
+        DATA.recordEvent('experiment.start', {
+            condition: condition,
+            timestamp: Date.now()
+        });
+    } else {
+        console.error('DATA or DATA.recordEvent is not defined');
+    }
 
     // Load configuration from JSON file
     var config = null;
@@ -119,13 +108,17 @@ var GridWorldExperiment = function() {
     var starts = [];
     var imagePairs = [];
     var trialNumbers = [];
-    
+    var repeat_index = [];
+    var rule = [];
+
     // Process each trial in the main trials array
     config.trials.main.forEach(trial => {
         mazes.push(trial.grid);
         starts.push(trial.start);
         imagePairs.push(trial.image_pairs);
         trialNumbers.push(trial.trial_number);
+        repeat_index.push(trial.repeat_index);
+        rule.push(trial.rule);
     });
 
     // Set up the current trial index
@@ -343,9 +336,12 @@ var GridWorldExperiment = function() {
         currentIndex += 1;  // Increment to move to next trial
         
         // Record trial initialization
-        DATA.recordEvent('trial.start', {
+        DATA.recordEvent('trial start', {
             trial_number: currentIndex,
             grid: maze,
+            trial_type: rule[currentIndex], 
+            repeat_index: repeat_index[currentIndex],
+            image_pairs: imagePairs[currentIndex],
             threshold_hits: threshold_hits,
             score: score,
             cumulative_score: cumScore,
