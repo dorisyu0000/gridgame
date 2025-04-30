@@ -63,6 +63,7 @@ var GridWorldExperiment = function() {
     
     var condition=Math.floor(Math.random() * 10) + 1;  // Random condition from 1-10
     var BREAK_INTERVAL = 10;  // Show break every 10 trials
+    var TOTAL_TRIALS = 120;  // Total number of trials to run
       
     // Record experiment initialization
     psiTurk.recordTrialData({
@@ -122,7 +123,7 @@ var GridWorldExperiment = function() {
     var num_solves = 0;
     var maze = mazes[currentIndex];
     var threshold_hits = calculate_sum(maze, 1);
-    var threshold_solves = maze.length;
+    var threshold_solves = 120;
     var n = maze.length;
     var num_hits = 1;
     var score = 0;
@@ -137,7 +138,6 @@ var GridWorldExperiment = function() {
     // Create image objects
     var image1 = new Image();
     var image2 = new Image();
-    
     // Function to update image sources for current trial
     var updateImages = function() {
         var currentPair = imagePairs[currentIndex];
@@ -345,12 +345,6 @@ var GridWorldExperiment = function() {
             timestamp: Date.now()
         });
         
-        // Check if we should end the experiment
-        if (num_solves > threshold_solves) {
-            finish();  // This will end the game and go to post-questionnaire
-            return;
-        }
-        
         // Check if we should show a break
         if (currentIndex > 0 && currentIndex % BREAK_INTERVAL === 0) {
             show_break();
@@ -391,7 +385,8 @@ var GridWorldExperiment = function() {
                 timestamp: Date.now()
             });
             
-            if(num_solves >= threshold_solves) {
+            // Check if we've completed all trials
+            if(currentIndex >= TOTAL_TRIALS - 1) {
                 listening = false; 
                 final_board();
                 await new Promise(r => setTimeout(r, 2000));
