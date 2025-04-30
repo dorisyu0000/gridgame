@@ -65,15 +65,11 @@ var GridWorldExperiment = function() {
     var BREAK_INTERVAL = 10;  // Show break every 10 trials
       
     // Record experiment initialization
-    if (typeof DATA !== 'undefined' && DATA.recordEvent) {
-        console.log('Recording experiment start');
-        DATA.recordEvent('experiment.start', {
-            condition: condition,
-            timestamp: Date.now()
-        });
-    } else {
-        console.error('DATA or DATA.recordEvent is not defined');
-    }
+    psiTurk.recordTrialData({
+        phase: 'experiment.start',
+        condition: condition,
+        timestamp: Date.now()
+    });
 
     // Load configuration from JSON file
     var config = null;
@@ -336,7 +332,8 @@ var GridWorldExperiment = function() {
         currentIndex += 1;  // Increment to move to next trial
         
         // Record trial initialization
-        DATA.recordEvent('trial start', {
+        psiTurk.recordTrialData({
+            phase: 'trial start',
             trial_number: currentIndex,
             grid: maze,
             trial_type: rule[currentIndex], 
@@ -385,33 +382,28 @@ var GridWorldExperiment = function() {
             num_solves += 1;
 
             // Record trial completion
-            try {
-                DATA.recordEvent('trial.complete', {
-                    trial_number: currentIndex,
-                    score: score,
-                    cumulative_score: cumScore,
-                    time_taken: Date.now() - init_time,
-                    timestamp: Date.now()
-                });
-                DATA.save();
-            } catch (error) {
-                console.error('Error saving data:', error);
-                // You might want to retry saving here
-            }
+            psiTurk.recordTrialData({
+                phase: 'trial.complete',
+                trial_number: currentIndex,
+                score: score,
+                cumulative_score: cumScore,
+                time_taken: Date.now() - init_time,
+                timestamp: Date.now()
+            });
             
             if(num_solves >= threshold_solves) {
                 listening = false; 
                 final_board();
                 await new Promise(r => setTimeout(r, 2000));
-                finish();  // This will end the game and go to post-questionnaire
-                return;  // Exit the function to prevent further execution
+                finish();
+                return;
             } else {
                 listening = false;
                 cumScore += score; 
                 final_board();
                 await new Promise(r => setTimeout(r, 2000));
                 score = 0;
-                currentTrialScore = 6;  // Reset current trial score
+                currentTrialScore = 6;
                 go_next_game();
             } 
         }
@@ -458,12 +450,13 @@ var GridWorldExperiment = function() {
                 reward = -1;
                 board[r][c] = 0; 
                 score = score - 1;
-                currentTrialScore = currentTrialScore - 1;  // Update current trial score
+                currentTrialScore = currentTrialScore - 1;
             }
         }
 
         // Record click event
-        DATA.recordEvent('trial.click', {
+        psiTurk.recordTrialData({
+            phase: 'trial.click',
             trial_number: currentIndex,
             pos: [r, c],
             reward: reward,
@@ -495,7 +488,8 @@ var GridWorldExperiment = function() {
         var bonus = cumScore / 100;
         
         // Record experiment completion with bonus
-        DATA.recordEvent('experiment.complete', {
+        psiTurk.recordTrialData({
+            phase: 'experiment.complete',
             final_score: cumScore,
             total_trials: num_solves,
             bonus: bonus,
@@ -504,10 +498,35 @@ var GridWorldExperiment = function() {
 
         // Record bonus in questiondata
         psiTurk.recordUnstructuredData('bonus', bonus);
+        psiTurk.recordUnstructuredData('cumScore', cumScore);
 
-        $("body").unbind("click", response_handler);
-        currentview = new Questionnaire();
-        DATA.save();
+        // Save all data to psiTurk
+        psiTurk.saveData({
+            success: function() {
+                console.log('Data saved successfully');
+                $("body").unbind("click", response_handler);
+                currentview = new Questionnaire();
+            },
+            error: function() {
+                console.error('Error saving data');
+                // Retry saving
+                setTimeout(function() {
+                    psiTurk.saveData({
+                        success: function() {
+                            console.log('Data saved on retry');
+                            $("body").unbind("click", response_handler);
+                            currentview = new Questionnaire();
+                        },
+                        error: function() {
+                            console.error('Failed to save data after retry');
+                            // Still proceed to questionnaire
+                            $("body").unbind("click", response_handler);
+                            currentview = new Questionnaire();
+                        }
+                    });
+                }, 1000);
+            }
+        });
     };
 
     // Load the stage.html snippet into the body of the page

@@ -112,36 +112,47 @@ def write_data(version, mode):
     bonus = {}
     for p in ps:
         if p.datastring is None:
+            print(f"Warning: No datastring for participant {p.workerid}")
             continue
-        datastring = json.loads(p.datastring)
-
-        wid = anonymize(p.workerid)
-
-        meta = pick(datastring, metakeys)
-        meta['wid'] = wid
-        
-        # Calculate bonus from cumScore if available
-        if 'cumScore' in meta:
-            bonus[p.workerid] = meta['cumScore'] / 100
-        elif 'bonus' in meta:
-            bonus[p.workerid] = meta['bonus']
-        else:
-            bonus[p.workerid] = 0
-
-        for k, v in datastring['questiondata'].items():
-            if k.lower() == 'params':
-                for k1, v1 in v.items():
-                    if k1 == 'graphRenderOptions':
-                        continue
-                    meta[k1] = v1
+            
+        try:
+            datastring = json.loads(p.datastring)
+            wid = anonymize(p.workerid)
+            meta = pick(datastring, metakeys)
+            meta['wid'] = wid
+            
+            # Debug print
+            print(f"Processing participant {wid}")
+            print(f"Questiondata: {datastring.get('questiondata', {})}")
+            
+            # Calculate bonus from cumScore if available
+            if 'cumScore' in datastring.get('questiondata', {}):
+                bonus[p.workerid] = datastring['questiondata']['cumScore'] / 100
+                print(f"Calculated bonus from cumScore: {bonus[p.workerid]}")
+            elif 'bonus' in datastring.get('questiondata', {}):
+                bonus[p.workerid] = datastring['questiondata']['bonus']
+                print(f"Using existing bonus: {bonus[p.workerid]}")
             else:
-                meta[k] = v
-        participants.append(meta)
+                bonus[p.workerid] = 0
+                print("No bonus data found")
 
-        trialdata = [d['trialdata'] for d in datastring['data']]
+            for k, v in datastring['questiondata'].items():
+                if k.lower() == 'params':
+                    for k1, v1 in v.items():
+                        if k1 == 'graphRenderOptions':
+                            continue
+                        meta[k1] = v1
+                else:
+                    meta[k] = v
+            participants.append(meta)
 
-        with open(f'data/raw/{version}/events/{wid}.json', 'w') as f:
-            json.dump(trialdata, f)
+            trialdata = [d['trialdata'] for d in datastring['data']]
+            with open(f'data/raw/{version}/events/{wid}.json', 'w') as f:
+                json.dump(trialdata, f)
+                
+        except Exception as e:
+            print(f"Error processing participant {p.workerid}: {str(e)}")
+            continue
 
     write_csv(f'data/raw/{version}/participants.csv', participants)
 
@@ -154,8 +165,9 @@ def write_data(version, mode):
     with open(f'bonus.json', 'w') as f:
         json.dump(bonus, f)
 
-    print(len(participants), 'participants')
-    print(f'data/raw/{version}/participants.csv')
+    print(f"\nProcessed {len(participants)} participants")
+    print(f"Bonus data: {json.dumps(bonus, indent=2)}")
+    print(f"Data written to: data/raw/{version}/participants.csv")
 
 if __name__ == "__main__":
     parser = ArgumentParser(
