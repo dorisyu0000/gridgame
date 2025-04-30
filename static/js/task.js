@@ -385,14 +385,19 @@ var GridWorldExperiment = function() {
             num_solves += 1;
 
             // Record trial completion
-            DATA.recordEvent('trial.complete', {
-                trial_number: currentIndex,
-                score: score,
-                cumulative_score: cumScore,
-                time_taken: Date.now() - init_time,
-                timestamp: Date.now()
-            });
-            DATA.save();
+            try {
+                DATA.recordEvent('trial.complete', {
+                    trial_number: currentIndex,
+                    score: score,
+                    cumulative_score: cumScore,
+                    time_taken: Date.now() - init_time,
+                    timestamp: Date.now()
+                });
+                DATA.save();
+            } catch (error) {
+                console.error('Error saving data:', error);
+                // You might want to retry saving here
+            }
             
             if(num_solves >= threshold_solves) {
                 listening = false; 
@@ -486,12 +491,19 @@ var GridWorldExperiment = function() {
     };
 
     var finish = function() {
-        // Record experiment completion
+        // Calculate bonus
+        var bonus = cumScore / 100;
+        
+        // Record experiment completion with bonus
         DATA.recordEvent('experiment.complete', {
             final_score: cumScore,
             total_trials: num_solves,
+            bonus: bonus,
             timestamp: Date.now()
         });
+
+        // Record bonus in questiondata
+        psiTurk.recordUnstructuredData('bonus', bonus);
 
         $("body").unbind("click", response_handler);
         currentview = new Questionnaire();
@@ -506,6 +518,16 @@ var GridWorldExperiment = function() {
 
     // Start the test
     next();
+
+    // Add this to your GridWorldExperiment constructor
+    setInterval(() => {
+        try {
+            DATA.save();
+            console.log('Auto-saved data');
+        } catch (error) {
+            console.error('Error in auto-save:', error);
+        }
+    }, 30000); // Save every 30 seconds
 };
 
 
@@ -589,4 +611,12 @@ $(window).on('load', async () => {
       function() { currentview = new GridWorldExperiment(); } // what you want to do when you are done with instructions
     );
 });  
+
+window.addEventListener('beforeunload', function() {
+    try {
+        DATA.save();
+    } catch (error) {
+        console.error('Error saving before unload:', error);
+    }
+});
 

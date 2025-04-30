@@ -95,7 +95,6 @@ def write_data(version, mode):
         env["PORT"] = ""
         env["ON_CLOUD"] = "1"
         env["DATABASE_URL"] = get_database()
-        # what should go here??
 
     from psiturk.models import Participant  # must be imported after setting env params
     ps = Participant.query.filter(Participant.codeversion == version).all()
@@ -105,7 +104,6 @@ def write_data(version, mode):
             if 'debug' not in p.uniqueid
             and not p.workerid.startswith('601055')  # the "preview" participant
         ]
-    # Note: we don't filter by completion status.
 
     metakeys = ['condition', 'counterbalance', 'assignmentId', 'hitId', 'useragent', 'mode', 'status']
     participants = []
@@ -121,18 +119,24 @@ def write_data(version, mode):
 
         meta = pick(datastring, metakeys)
         meta['wid'] = wid
+        
+        # Calculate bonus from cumScore if available
+        if 'cumScore' in meta:
+            bonus[p.workerid] = meta['cumScore'] / 100
+        elif 'bonus' in meta:
+            bonus[p.workerid] = meta['bonus']
+        else:
+            bonus[p.workerid] = 0
+
         for k, v in datastring['questiondata'].items():
             if k.lower() == 'params':
                 for k1, v1 in v.items():
                     if k1 == 'graphRenderOptions':
                         continue
                     meta[k1] = v1
-
             else:
                 meta[k] = v
         participants.append(meta)
-        if 'bonus' in meta:
-            bonus[p.workerid] = meta['bonus']
 
         trialdata = [d['trialdata'] for d in datastring['data']]
 

@@ -6,7 +6,7 @@ num_conds = 10
 num_counters = 1
 
 [Database Parameters]
-database_url = sqlite:///participants.db
+database_url = postgres://ub8jopum77jj93:p0c2ac7b6998cc92f7e8f1f8fbb41153e6ea94a8ac54963427001c81fddd23e4c@ca932070ke6bv1.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/d8vv8a5mr3o481
 table_name = participants
 
 [Prolific]

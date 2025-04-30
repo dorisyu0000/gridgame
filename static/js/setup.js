@@ -7,6 +7,11 @@ function assert(condition, message) {
     }
 }
 
+// Helper function to sleep/wait
+function sleep(ms, value) {
+    return new Promise(resolve => setTimeout(() => resolve(value), ms));
+}
+
 // Helper function to parse JSON strings
 function maybeJson(value) {
     try {
